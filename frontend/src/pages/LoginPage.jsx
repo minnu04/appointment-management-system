@@ -10,6 +10,24 @@ export function LoginPage() {
   const [form, setForm] = useState({ email: '', password: '' })
   const [loading, setLoading] = useState(false)
 
+  const getErrorMessage = (error) => {
+    const response = error.response?.data
+
+    if (response?.errors?.length) {
+      return response.errors[0].message
+    }
+
+    if (response?.message) {
+      return response.message
+    }
+
+    if (error.code === 'ERR_NETWORK') {
+      return 'Unable to reach the server. Check backend deployment and CORS configuration.'
+    }
+
+    return 'Unable to log in'
+  }
+
   const handleSubmit = async (event) => {
     event.preventDefault()
     setLoading(true)
@@ -18,7 +36,7 @@ export function LoginPage() {
       const { user } = await login(form)
       navigate(user.role === 'admin' ? '/admin' : '/dashboard')
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Unable to log in')
+      toast.error(getErrorMessage(error))
     } finally {
       setLoading(false)
     }
@@ -40,7 +58,7 @@ export function LoginPage() {
               value={form.email}
               onChange={(event) => setForm({ ...form, email: event.target.value })}
               className="soft-ring w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none placeholder:text-slate-500"
-              placeholder="name@college.edu"
+              placeholder="name@klu.ac.in"
               required
             />
           </label>
