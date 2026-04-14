@@ -35,6 +35,10 @@ const bookAppointment = async (req, res) => {
   }
 
   const dateTime = parseDateTime(slot.date, slot.time);
+  if (dateTime < new Date()) {
+    return res.status(400).json({ message: 'Cannot book a slot that has already passed' });
+  }
+
   if (!emergencyRequest && !isWithinHours(dateTime, 48)) {
     return res.status(400).json({
       message: 'Normal bookings must be within 48 hours. Select Emergency Request for later slots.',

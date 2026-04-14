@@ -22,7 +22,7 @@ export function LoginPage() {
     }
 
     if (error.code === 'ERR_NETWORK') {
-      return 'Unable to reach the server. Check backend deployment and CORS configuration.'
+      return 'Unable to reach the server. Ensure backend is running on port 5000 and frontend dev server is restarted.'
     }
 
     return 'Unable to log in'

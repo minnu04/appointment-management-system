@@ -77,7 +77,7 @@ export function RegisterPage() {
               value={form.email}
               onChange={(event) => setForm({ ...form, email: event.target.value })}
               className="soft-ring w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none"
-              placeholder="name@college.edu"
+              placeholder="name@klu.ac.in"
               required
             />
           </label>

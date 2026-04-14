@@ -43,19 +43,8 @@ const normalizePort = (value) => {
 
 const app = express();
 
-const allowedOrigins = String(process.env.CLIENT_URL || '')
-  .split(',')
-  .map((origin) => origin.trim())
-  .filter(Boolean);
-
 const corsOptions = {
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-
-    return callback(new Error('Not allowed by CORS'));
-  },
+  origin: (origin, callback) => callback(null, true),
   credentials: false,
 };
 

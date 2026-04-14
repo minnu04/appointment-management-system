@@ -48,7 +48,7 @@ const createSlots = async (req, res) => {
 
 const getAvailableSlots = async (req, res) => {
   const { facultyId, date } = req.query;
-  const filters = { status: 'available' };
+  const filters = { status: 'available', startAt: { $gte: new Date() } };
 
   if (facultyId) {
     filters.facultyId = facultyId;
