@@ -1,16 +1,12 @@
 const nodemailer = require('nodemailer');
-
 let cachedTransporter;
-
 const buildTransporter = async () => {
   if (cachedTransporter) {
     return cachedTransporter;
   }
-
   if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
     throw new Error('SMTP is not fully configured. Set SMTP_HOST, SMTP_USER, and SMTP_PASS.');
   }
-
   cachedTransporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT || 587),
@@ -23,7 +19,6 @@ const buildTransporter = async () => {
 
   return cachedTransporter;
 };
-
 const sendEmail = async ({ to, subject, html, text }) => {
   const transporter = await buildTransporter();
   const from = process.env.EMAIL_FROM || 'College Appointment System <no-reply@college.edu>';
@@ -33,7 +28,6 @@ const sendEmail = async ({ to, subject, html, text }) => {
 
   return result;
 };
-
 const sendOtpEmail = async (email, name, otp) => {
   return sendEmail({
     to: email,
@@ -50,7 +44,6 @@ const sendOtpEmail = async (email, name, otp) => {
     text: `Your verification code is ${otp}. It expires in 10 minutes.`,
   });
 };
-
 const sendBookingConfirmation = async (appointment, student, faculty) => {
   const subject = `Appointment request received for ${appointment.date} ${appointment.time}`;
   const html = `
@@ -64,13 +57,11 @@ const sendBookingConfirmation = async (appointment, student, faculty) => {
       <p>Reason: ${appointment.reason}</p>
     </div>
   `;
-
   await Promise.all([
     sendEmail({ to: student.email, subject, html }),
     sendEmail({ to: faculty.email, subject: `New appointment request from ${student.name}`, html }),
   ]);
 };
-
 const sendStatusEmail = async (appointment, student, faculty, action) => {
   const title = action.charAt(0).toUpperCase() + action.slice(1);
   return sendEmail({
@@ -88,7 +79,6 @@ const sendStatusEmail = async (appointment, student, faculty, action) => {
     `,
   });
 };
-
 const sendReminderEmail = async (appointment, student, faculty) => {
   return sendEmail({
     to: student.email,
@@ -102,7 +92,6 @@ const sendReminderEmail = async (appointment, student, faculty) => {
     `,
   });
 };
-
 module.exports = {
   sendEmail,
   sendOtpEmail,
