@@ -58,9 +58,12 @@ const getAvailableSlots = async (req, res) => {
     filters.date = date;
   }
 
-  const slots = await Slot.find(filters)
-    .populate('facultyId', 'name email department designation')
+  let slots = await Slot.find(filters)
+    .populate('facultyId', 'name email department designation completedDates')
     .sort({ startAt: 1 });
+
+  // Filter out slots from completed dates
+  slots = slots.filter((slot) => !slot.facultyId.completedDates.includes(slot.date));
 
   res.json({ slots });
 };
@@ -70,8 +73,48 @@ const getFacultySlots = async (req, res) => {
   res.json({ slots });
 };
 
+const markDateAsCompleted = async (req, res) => {
+  const { date } = req.body;
+
+  if (!date) {
+    return res.status(400).json({ message: 'Date is required' });
+  }
+
+  const faculty = await User.findById(req.user.id || req.user._id);
+  if (!faculty || faculty.role !== 'faculty') {
+    return res.status(403).json({ message: 'Only faculty can mark dates as completed' });
+  }
+
+  if (!faculty.completedDates.includes(date)) {
+    faculty.completedDates.push(date);
+    await faculty.save();
+  }
+
+  res.json({ message: 'Date marked as completed', completedDates: faculty.completedDates });
+};
+
+const unmarkDateAsCompleted = async (req, res) => {
+  const { date } = req.body;
+
+  if (!date) {
+    return res.status(400).json({ message: 'Date is required' });
+  }
+
+  const faculty = await User.findById(req.user.id || req.user._id);
+  if (!faculty || faculty.role !== 'faculty') {
+    return res.status(403).json({ message: 'Only faculty can unmark dates' });
+  }
+
+  faculty.completedDates = faculty.completedDates.filter((d) => d !== date);
+  await faculty.save();
+
+  res.json({ message: 'Date unmarked as completed', completedDates: faculty.completedDates });
+};
+
 module.exports = {
   createSlots,
   getAvailableSlots,
   getFacultySlots,
+  markDateAsCompleted,
+  unmarkDateAsCompleted,
 };

@@ -43,6 +43,8 @@ export const slotsApi = {
   available: (params) => api.get('/slots/available', { params }),
   faculty: () => api.get('/slots/faculty'),
   create: (payload) => api.post('/slots', payload),
+  markDateCompleted: (payload) => api.post('/slots/mark-completed', payload),
+  unmarkDateCompleted: (payload) => api.post('/slots/unmark-completed', payload),
 }
 
 export const appointmentsApi = {
