@@ -48,9 +48,25 @@ const allowedOrigins = String(process.env.CLIENT_URL || '')
   .map((origin) => origin.trim())
   .filter(Boolean);
 
+const normalizeOrigin = (origin) => {
+  return String(origin || '').trim().replace(/\/$/, '');
+};
+
+const isLocalDevOrigin = (origin) => {
+  return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(normalizeOrigin(origin));
+};
+
 const corsOptions = {
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+    console.log('CORS check:', { origin, nodeEnv: process.env.NODE_ENV });
+
+    if (process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+
+    const normalizedOrigin = normalizeOrigin(origin);
+
+    if (!normalizedOrigin || allowedOrigins.length === 0 || allowedOrigins.includes(normalizedOrigin) || isLocalDevOrigin(normalizedOrigin)) {
       return callback(null, true);
     }
 
