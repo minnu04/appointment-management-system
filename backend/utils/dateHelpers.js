@@ -11,7 +11,7 @@ const isWithinNextDays = (dateTime, days) => {
 const isWithinHours = (dateTime, hours) => {
   const now = new Date();
   const max = new Date(now.getTime() + hours * 60 * 60 * 1000);
-  return dateTime <= max;
+  return dateTime >= now && dateTime <= max;
 };
 
 module.exports = { parseDateTime, isWithinNextDays, isWithinHours };

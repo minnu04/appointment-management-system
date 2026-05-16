@@ -41,6 +41,10 @@ const userSchema = new mongoose.Schema(
     rollNo: String,
     rejectedReason: String,
     lastLoginAt: Date,
+    completedDates: {
+      type: [String],
+      default: [],
+    },
   },
   { timestamps: true },
 );

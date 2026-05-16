@@ -3,7 +3,7 @@ import { format, parseISO } from 'date-fns'
 import toast from 'react-hot-toast'
 import { CalendarCheck2, CalendarClock, CheckCircle2, ClipboardList, PlusCircle, ShieldAlert } from 'lucide-react'
 import { useAuth } from '../context/AuthContext.jsx'
-import { appointmentsApi, dashboardApi, slotsApi } from '../services/api.js'
+import { appointmentsApi, authApi, dashboardApi, slotsApi } from '../services/api.js'
 import { StatCard } from '../components/StatCard.jsx'
 
 const formatDateTime = (date, time) => format(parseISO(`${date}T${time}:00`), 'PPpp')
@@ -108,12 +108,68 @@ function FacultySlotCreator({ onCreated }) {
   )
 }
 
+function CompletedDatesManager({ slots, onDateToggle, completedDates }) {
+  const uniqueDates = [...new Set(slots.map((slot) => slot.date))].sort();
+
+  const handleToggleDate = async (date) => {
+    const isCompleted = completedDates.includes(date);
+    try {
+      if (isCompleted) {
+        await slotsApi.unmarkDateCompleted({ date });
+      } else {
+        await slotsApi.markDateCompleted({ date });
+      }
+      await onDateToggle();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Action failed');
+    }
+  };
+
+  return (
+    <div className="glass-panel rounded-3xl p-5">
+      <h3 className="text-lg font-semibold text-white">Manage slot dates</h3>
+      <p className="mt-2 text-sm text-slate-400">Mark dates as completed to prevent student bookings</p>
+      <div className="mt-4 space-y-2">
+        {uniqueDates.length === 0 ? (
+          <p className="text-sm text-slate-400">No slots created yet.</p>
+        ) : (
+          uniqueDates.map((date) => {
+            const isCompleted = completedDates.includes(date);
+            return (
+              <div
+                key={date}
+                className="flex items-center justify-between rounded-2xl border border-white/8 bg-white/5 p-3"
+              >
+                <span className={`text-sm ${isCompleted ? 'text-slate-500 line-through' : 'text-slate-300'}`}>
+                  {format(parseISO(date), 'PPP')}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleToggleDate(date)}
+                  className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+                    isCompleted
+                      ? 'bg-slate-400/10 text-slate-300'
+                      : 'bg-emerald-400/10 text-emerald-300 hover:bg-emerald-400/20'
+                  }`}
+                >
+                  {isCompleted ? 'Completed' : 'Mark Completed'}
+                </button>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function DashboardPage() {
   const { user } = useAuth()
   const [dashboard, setDashboard] = useState(null)
   const [appointments, setAppointments] = useState([])
   const [slots, setSlots] = useState([])
   const [loading, setLoading] = useState(true)
+  const [completedDates, setCompletedDates] = useState([])
 
   const loadStudentData = async () => {
     const [dashboardResult, appointmentResult, slotResult] = await Promise.all([
@@ -128,15 +184,17 @@ export function DashboardPage() {
   }
 
   const loadFacultyData = async () => {
-    const [dashboardResult, appointmentResult, slotResult] = await Promise.all([
+    const [dashboardResult, appointmentResult, slotResult, meResult] = await Promise.all([
       dashboardApi.get(),
       appointmentsApi.faculty(),
       slotsApi.faculty(),
+      authApi.me(),
     ])
 
     setDashboard(dashboardResult.data.dashboard)
     setAppointments(appointmentResult.data.appointments)
     setSlots(slotResult.data.slots)
+    setCompletedDates(meResult.data.user.completedDates || [])
   }
 
   const loadData = async () => {
@@ -271,6 +329,8 @@ export function DashboardPage() {
               ))}
             </div>
           </div>
+
+          <CompletedDatesManager slots={slots} onDateToggle={loadData} completedDates={completedDates} />
 
           <div className="glass-panel rounded-3xl p-5">
             <h3 className="text-lg font-semibold text-white">Action queue</h3>

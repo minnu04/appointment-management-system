@@ -41,13 +41,39 @@ const register = async (req, res) => {
     return res.status(400).json({ message: 'Only student and faculty registration is allowed' });
   }
 
-  const existingUser = await User.findOne({ email: normalizedEmail });
-  if (existingUser) {
-    return res.status(400).json({ message: 'Email is already registered' });
-  }
-
   const otp = generateOtp();
   const hashedPassword = await bcrypt.hash(password, 10);
+  const existingUser = await User.findOne({ email: normalizedEmail });
+  if (existingUser) {
+    if (existingUser.verified) {
+      return res.status(400).json({ message: 'Email is already registered' });
+    }
+
+    existingUser.name = name;
+    existingUser.password = hashedPassword;
+    existingUser.role = role;
+    existingUser.approved = role === 'student';
+    existingUser.department = department;
+    existingUser.designation = designation;
+    existingUser.employeeId = employeeId;
+    existingUser.rollNo = rollNo;
+    existingUser.otpHash = hashOtp(otp);
+    existingUser.otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    await existingUser.save();
+
+    try {
+      await sendOtpEmail(existingUser.email, existingUser.name, otp);
+      return res.status(200).json({
+        message: 'Account already exists but is not verified. A new OTP has been sent.',
+        user: sanitizeUser(existingUser),
+      });
+    } catch (emailError) {
+      console.error('OTP email send failed during register retry:', emailError.message);
+      return res.status(502).json({
+        message: 'Unable to deliver OTP email. Please check SMTP configuration and try again.',
+      });
+    }
+  }
 
   const user = await User.create({
     name,

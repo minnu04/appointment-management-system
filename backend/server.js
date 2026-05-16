@@ -7,6 +7,7 @@ dotenv.config();
 const connectDB = require('./config/db');
 const { errorHandler, notFound } = require('./middlewares/errorMiddleware');
 const { seedAdmin } = require('./utils/seedAdmin');
+const { seedFaculty } = require('./utils/seedFaculty');
 const { startReminderJob } = require('./jobs/reminderJob');
 
 const authRoutes = require('./routes/authRoutes');
@@ -43,6 +44,7 @@ const normalizePort = (value) => {
 
 const app = express();
 
+<<<<<<< HEAD
 const allowedOrigins = String(process.env.CLIENT_URL || '')
   .split(',')
   .map((origin) => origin.trim())
@@ -72,6 +74,10 @@ const corsOptions = {
 
     return callback(new Error('Not allowed by CORS'));
   },
+=======
+const corsOptions = {
+  origin: (origin, callback) => callback(null, true),
+>>>>>>> 46a5ecd3fc1339363f0af9ab4674032a2a5a6fc1
   credentials: false,
 };
 
@@ -99,6 +105,7 @@ const startServer = async () => {
   try {
     await connectDB();
     await seedAdmin();
+    await seedFaculty();
     startReminderJob();
 
     const port = normalizePort(process.env.PORT);

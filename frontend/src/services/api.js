@@ -1,9 +1,20 @@
 import axios from 'axios'
 
+const resolveBaseUrl = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL
+  }
+
+  // In local dev, route API through Vite proxy to avoid CORS and host mismatch issues.
+  if (import.meta.env.DEV) {
+    return '/api'
+  }
+
+  return 'https://appointment-management-system-ig4c.onrender.com/api'
+}
+
 const api = axios.create({
-  baseURL:
-    import.meta.env.VITE_API_URL ||
-    'https://appointment-management-system-ig4c.onrender.com/api',
+  baseURL: resolveBaseUrl(),
 })
 
 api.interceptors.request.use((config) => {
@@ -32,6 +43,8 @@ export const slotsApi = {
   available: (params) => api.get('/slots/available', { params }),
   faculty: () => api.get('/slots/faculty'),
   create: (payload) => api.post('/slots', payload),
+  markDateCompleted: (payload) => api.post('/slots/mark-completed', payload),
+  unmarkDateCompleted: (payload) => api.post('/slots/unmark-completed', payload),
 }
 
 export const appointmentsApi = {
